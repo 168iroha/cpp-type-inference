@@ -1410,10 +1410,9 @@ std::string Add::methodName = "";
 /// <param name="os">出力ストリーム</param>
 /// <param name="type">出力対象の型</param>
 /// <returns></returns>
-std::ostream& operator<<(std::ostream& os, std::pair<RefType, TypeMap> type) {
+std::ostream& operator<<(std::ostream& os, RefType type) {
     struct fn {
         std::ostream& o;
-        TypeMap& m;
         char varCnt = 'a';
         std::unordered_map<const Type::Variable*, char> varmap = {};
 
@@ -1506,14 +1505,6 @@ std::ostream& operator<<(std::ostream& os, std::pair<RefType, TypeMap> type) {
                     this->o << '(';
                 }
                 // 型クラスとわかるようにプレフィックスとして「:」を付けて出力する
-                // Visual StudioのC++以外ではまだ動かないコード
-                //this->o << ':' << (this->m.typeClassMap |
-                //    std::views::filter([&x](auto& p) {
-                //        return std::ranges::find_if(x.typeClasses.list, [&p](auto& typeClass) { return typeClass == p.second; }) != x.typeClasses.list.end();
-                //    }) |
-                //    std::views::transform([](auto& p) -> auto& { return p.first; }) |
-                //    std::views::join_with(std::string_view{ " + :" }) | std::ranges::to<std::string>());
-                // 上記コードの書き換え
                 for (decltype(x.typeClasses.list.size()) i = 0; i < x.typeClasses.list.size(); ++i) {
                     auto& l = x.typeClasses.list[i];
                     if (auto itr = std::ranges::find_if(x.typeClasses.list, [&l](auto& typeClass) { return typeClass == l; }); itr != x.typeClasses.list.end()) {
@@ -1532,7 +1523,7 @@ std::ostream& operator<<(std::ostream& os, std::pair<RefType, TypeMap> type) {
             }
         }
     };
-    std::visit(fn{ .o = os, .m = type.second }, type.first->kind);
+    std::visit(fn{ .o = os }, type->kind);
 
     return os;
 }
@@ -1630,9 +1621,9 @@ int main() {
     {
         // 型環境を使いまわして型推論をすると実質的にlet束縛で式を連結したことになってしまうが
         // 今回はシャドウも型環境の上書き禁止もないため許容する
-        std::cout << "Algorithm J: " << std::pair{ expr->J(typeMap, env), typeMap } << std::endl;
+        std::cout << "Algorithm J: " << expr->J(typeMap, env) << std::endl;
         auto t = env.newType(Type::Variable{ .depth = env.depth - 1 });
         expr->M(typeMap, env, t);
-        std::cout << "Algorithm M: " << std::pair{ t, typeMap } << std::endl;
+        std::cout << "Algorithm M: " << t << std::endl;
     }
 }
