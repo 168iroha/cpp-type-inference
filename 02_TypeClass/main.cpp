@@ -1533,7 +1533,7 @@ RefType base(TypeEnvironment& env, const std::string& name) { return env.newType
 RefType var(TypeEnvironment& env) { return env.newType(Type::Variable{ .depth = env.depth + 1 }); }
 RefType param(TypeEnvironment& env, std::size_t index = 0) { return env.newType(Type::Param{ .index = index }); }
 RefType fun(TypeEnvironment& env, RefType base, RefType paramType, RefType returnType) { return env.newType(Type::Function{ .base = base, .paramType = paramType, .returnType = returnType }); }
-RefType fun(TypeMap& typeMap, TypeEnvironment& env, const Generic& base, RefType paramType, RefType returnType) { return env.instantiate(typeMap, base, { paramType, returnType }); }
+RefType fun(TypeMap& typeMap, TypeEnvironment& env, RefType paramType, RefType returnType) { return env.instantiate(typeMap, typeMap.builtin.fn, { paramType, returnType }); }
 template <class... Types>
 RefType tc(TypeEnvironment& env, Types&&... args) { return env.newType(Type::TypeClass{ .typeClasses{.list = { std::forward<Types>(args)...}} }); }
 
@@ -1575,7 +1575,7 @@ int main() {
             .type = valT,
             .methods = {
                 // add :: 'a -> 'a -> 'a
-                { Add::methodName, fun(typeMap, env, typeMap.builtin.fn, valT, fun(typeMap, env, typeMap.builtin.fn, valT, valT)) }
+                { Add::methodName, fun(typeMap, env, valT, fun(typeMap, env, valT, valT)) }
             }
         }));
     })();
@@ -1589,7 +1589,7 @@ int main() {
             .type = valT,
             .methods = {
                 // method :: 'a -> 'a -> 'a
-                { "method", fun(typeMap, env, typeMap.builtin.fn, valT, fun(typeMap, env, typeMap.builtin.fn, valT, valT)) }
+                { "method", fun(typeMap, env, valT, fun(typeMap, env, valT, valT)) }
             }
         }));
     })());
